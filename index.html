@@ -1,0 +1,187 @@
+<!-- FIXED VERSION: syntax error + captcha/auth flow cleaned -->
+
+<!-- FRONTEND: index.html -->
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EduAI</title>
+  <style>
+:root{
+  --primary:#4f46e5;
+  --secondary:#06b6d4;
+  --bg-dark:#0f172a;
+  --glass:rgba(255,255,255,.75);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  min-height:100vh;
+  font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  background:
+    radial-gradient(1200px 600px at 10% -10%,#6366f1 0%,transparent 60%),
+    radial-gradient(800px 500px at 90% 10%,#22d3ee 0%,transparent 55%),
+    linear-gradient(180deg,#020617,#020617);
+  color:#e5e7eb;
+}
+header{padding:28px 48px;font-weight:700;font-size:22px;display:flex;justify-content:center}
+.hero{text-align:center;padding:70px 20px}
+.hero h1{font-size:52px;margin:0}
+.hero h1 span{background:linear-gradient(90deg,#818cf8,#22d3ee);-webkit-background-clip:text;color:transparent}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:32px;max-width:900px;margin:50px auto;padding:0 24px}
+.card{background:var(--glass);backdrop-filter:blur(18px);border-radius:26px;padding:36px;text-align:center;color:#020617;transition:.3s}
+.card:hover{transform:translateY(-6px);box-shadow:0 20px 40px rgba(0,0,0,.15)}
+.card img{width:96px;height:96px;object-fit:contain;margin-bottom:16px}
+.card a{display:inline-block;margin-top:16px;padding:10px 18px;border-radius:999px;background:linear-gradient(135deg,var(--primary),var(--secondary));color:#fff;text-decoration:none}
+
+/* LOGIN */
+.login-wrap{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+  overflow:hidden;
+}
+.login-wrap::before{
+  content:"";
+  position:absolute;
+  inset:-40%;
+  background:
+    radial-gradient(600px 400px at 20% 20%,rgba(99,102,241,.35),transparent 60%),
+    radial-gradient(600px 400px at 80% 30%,rgba(34,211,238,.35),transparent 60%),
+    linear-gradient(135deg,#020617,#020617);
+  animation:floatBg 18s linear infinite;
+}
+@keyframes floatBg{
+  0%{transform:translate(0,0)}
+  50%{transform:translate(8%,6%)}
+  100%{transform:translate(0,0)}
+}
+.login-card{
+  position:relative;
+  z-index:1;
+  width:380px;
+  background:rgba(255,255,255,.82);
+  backdrop-filter:blur(22px);
+  border-radius:30px;
+  padding:44px 40px;
+  color:#020617;
+  box-shadow:0 30px 80px rgba(0,0,0,.35);
+}
+.login-card h2{text-align:center;margin-bottom:20px}
+.login-card input{
+  width:100%;
+  padding:15px 16px;
+  margin-bottom:16px;
+  border-radius:16px;
+  border:1px solid #e5e7eb;
+  font-size:15px;
+}
+.login-card button{
+  width:100%;
+  padding:16px;
+  border:none;
+  border-radius:18px;
+  background:linear-gradient(135deg,var(--primary),var(--secondary));
+  color:#fff;
+  font-weight:700;
+  font-size:16px;
+  cursor:pointer;
+  transition:.25s
+}
+.login-card button:hover{transform:translateY(-1px);box-shadow:0 12px 30px rgba(79,70,229,.45)}
+</style>
+</head>
+<body>
+<header>EduAI</header>
+<section class="hero">
+  <h1>Zamonaviy <span>AI ta'lim</span> platformasi</h1>
+</section>
+<section class="cards">
+  <div class="card">
+    <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="Admin" />
+    <h3>Admin</h3>
+    <a href="#login">Login</a>
+  </div>
+  <div class="card">
+    <img src="https://cdn-icons-png.flaticon.com/512/1995/1995574.png" alt="Domla" />
+    <h3>Domla</h3>
+    <a href="#login">Login</a>
+  </div>
+  <div class="card">
+    <img src="https://cdn-icons-png.flaticon.com/512/3135/3135823.png" alt="Talaba" />
+    <h3>Talaba</h3>
+    <a href="#login">Login</a>
+  </div>
+</section>
+
+<!-- LOGIN -->
+<div id="login" class="login-wrap">
+  <form class="login-card" onsubmit="return apiLogin()">
+    <!-- Google reCAPTCHA -->
+    <div class="g-recaptcha" data-sitekey="YOUR_SITE_KEY"></div>
+    <h2>Login</h2>
+    <input id="username" placeholder="Login" required />
+    <input id="password" type="password" placeholder="Parol" required />
+    
+    <button>Login</button>
+    <div style="margin-top:14px;font-size:13px;color:#5483c6;line-height:1.6">
+      <strong>Demo loginlar:</strong><br>
+      Admin: <code>admin</code> / <code>admin123</code><br>
+      Domla: <code>teacher</code> / <code>teacher123</code><br>
+      Talaba: <code>student</code> / <code>student123</code>
+    </div>
+  </form>
+</div>
+
+
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+<script>
+(function(){
+  window.apiLogin = async function(){
+    // reCAPTCHA tekshirish
+    if(typeof grecaptcha !== 'undefined'){
+      const rc = grecaptcha.getResponse();
+      if(!rc){ alert('Iltimos, reCAPTCHA ni belgilang'); return false; }
+    }
+    const u = document.getElementById('username').value;
+    const p = document.getElementById('password').value;
+
+    try{
+      const res = await fetch('http://127.0.0.1:8000/login',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({username:u,password:p})
+      });
+
+      if(!res.ok){
+        const err = await res.json();
+        alert(err.detail || 'Login xato');
+        return false;
+      }
+
+      const data = await res.json();
+      alert(data.message);
+
+      // REAL FUNCTIONALITY: saqlash (session)
+      localStorage.setItem('eduai_role', data.role);
+      localStorage.setItem('eduai_user', u);
+
+      // role bo‘yicha yo‘naltirish
+      if(data.role === 'Admin') window.location.href = 'admin.html';
+      if(data.role === 'Domla') window.location.href = 'teacher.html';
+      if(data.role === 'Talaba') window.location.href = 'student.html';
+
+      return false;
+    }catch(e){
+      alert('Backend bilan ulanish yo‘q');
+      return false;
+    }
+  };
+  console.assert(apiLogin instanceof Function,'apiLogin mavjud');
+})();
+</script>
+</body>
+</html>

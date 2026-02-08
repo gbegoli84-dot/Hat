@@ -1,0 +1,2069 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vizitka ID - Tizimga Kirish</title>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/barcodes/JsBarcode.code128.min.js"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary: #3498db;
+            --primary-dark: #2980b9;
+            --secondary: #2ecc71;
+            --secondary-dark: #27ae60;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --dark: #2c3e50;
+            --light: #ecf0f1;
+            --gray: #95a5a6;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        /* Auth Container */
+        .auth-container {
+            display: flex;
+            width: 100%;
+            max-width: 1000px;
+            min-height: 600px;
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+
+        .auth-left {
+            flex: 1;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            padding: 50px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .auth-left::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M0,0 L100,0 L100,100 Z" fill="rgba(255,255,255,0.1)"/></svg>');
+            background-size: cover;
+        }
+
+        .auth-right {
+            flex: 1;
+            padding: 50px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .auth-logo {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .auth-logo i {
+            background: rgba(255,255,255,0.2);
+            padding: 15px;
+            border-radius: 15px;
+        }
+
+        .auth-title {
+            font-size: 2rem;
+            margin-bottom: 30px;
+            color: var(--dark);
+        }
+
+        .auth-subtitle {
+            font-size: 1.1rem;
+            margin-bottom: 40px;
+            color: var(--gray);
+            line-height: 1.6;
+        }
+
+        .auth-features {
+            list-style: none;
+            margin-top: 40px;
+        }
+
+        .auth-features li {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 1.1rem;
+        }
+
+        .auth-features i {
+            background: rgba(255,255,255,0.2);
+            padding: 10px;
+            border-radius: 10px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--dark);
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 16px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s;
+            background: #f8f9fa;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: white;
+            box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.1);
+        }
+
+        .input-with-icon {
+            position: relative;
+        }
+
+        .input-with-icon i {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray);
+        }
+
+        .input-with-icon input {
+            padding-left: 50px;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 16px 32px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(52, 152, 219, 0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, var(--secondary), var(--secondary-dark));
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(46, 204, 113, 0.3);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--danger), #c0392b);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(231, 76, 60, 0.3);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-outline:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Auth Links */
+        .auth-links {
+            text-align: center;
+            margin-top: 30px;
+            color: var(--gray);
+        }
+
+        .auth-links a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .auth-links a:hover {
+            text-decoration: underline;
+        }
+
+        /* Dashboard Styles - Ko'rinadi faqat login qilgandan keyin */
+        .dashboard-container {
+            display: none;
+            width: 100%;
+            max-width: 1400px;
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: var(--dark);
+            color: white;
+            padding: 30px 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 0 30px 30px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .user-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .user-info h3 {
+            margin: 0 0 5px 0;
+            font-size: 1.2rem;
+        }
+
+        .user-info p {
+            margin: 0;
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+
+        .sidebar-menu {
+            flex: 1;
+            padding: 20px 0;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px 30px;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s;
+            border-left: 4px solid transparent;
+        }
+
+        .menu-item:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .menu-item.active {
+            background: rgba(52, 152, 219, 0.2);
+            border-left-color: var(--primary);
+        }
+
+        .menu-item i {
+            width: 20px;
+            text-align: center;
+        }
+
+        .sidebar-footer {
+            padding: 20px 30px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .navbar {
+            padding: 20px 30px;
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar-title {
+            font-size: 1.5rem;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .navbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .notification-btn {
+            position: relative;
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            color: var(--gray);
+            cursor: pointer;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: var(--danger);
+            color: white;
+            font-size: 0.7rem;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .content {
+            flex: 1;
+            padding: 30px;
+            background: #f8f9fa;
+            overflow-y: auto;
+        }
+
+        /* Dashboard Cards */
+        .dashboard-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .dashboard-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            transition: transform 0.3s;
+        }
+
+        .dashboard-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .card-icon.primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        }
+
+        .card-icon.success {
+            background: linear-gradient(135deg, var(--secondary), var(--secondary-dark));
+        }
+
+        .card-icon.warning {
+            background: linear-gradient(135deg, var(--warning), #e67e22);
+        }
+
+        .card-icon.danger {
+            background: linear-gradient(135deg, var(--danger), #c0392b);
+        }
+
+        .card-info h3 {
+            margin: 0 0 5px 0;
+            font-size: 1.8rem;
+            color: var(--dark);
+        }
+
+        .card-info p {
+            margin: 0;
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+
+        /* Vizitka yaratish formasi */
+        .card-form {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .photo-upload {
+            border: 3px dashed #bdc3c7;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 20px;
+        }
+
+        .photo-upload:hover {
+            border-color: var(--primary);
+            background: #f8f9fa;
+        }
+
+        .photo-upload i {
+            font-size: 3rem;
+            color: var(--gray);
+            margin-bottom: 15px;
+        }
+
+        #photoPreview {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 5px solid white;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            display: none;
+            margin: 0 auto 20px;
+        }
+
+        /* Vizitka ko'rinishi */
+        .id-card-preview {
+            background: linear-gradient(135deg, #2c3e50, #4a6491);
+            border-radius: 20px;
+            padding: 30px;
+            color: white;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            position: relative;
+            overflow: hidden;
+            min-height: 400px;
+            margin-bottom: 30px;
+        }
+
+        .id-card-preview::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+            animation: moveBackground 20s linear infinite;
+        }
+
+        @keyframes moveBackground {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .company-logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary);
+            background: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+        }
+
+        .card-type {
+            background: rgba(255,255,255,0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+
+        .card-body {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 25px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .card-photo {
+            width: 120px;
+            height: 120px;
+            border-radius: 15px;
+            object-fit: cover;
+            border: 3px solid white;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .card-info h2 {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            color: white;
+        }
+
+        .card-info p {
+            margin-bottom: 8px;
+            opacity: 0.9;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-info i {
+            color: var(--primary);
+            width: 20px;
+        }
+
+        .card-footer {
+            margin-top: 30px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .barcode-container {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .card-id {
+            text-align: center;
+            font-family: monospace;
+            font-size: 1.1rem;
+            letter-spacing: 2px;
+            background: rgba(255,255,255,0.1);
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        /* Vizitkalar jadvali */
+        .cards-table {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .table-header {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr 0.5fr;
+            padding: 20px;
+            background: var(--dark);
+            color: white;
+            font-weight: 600;
+        }
+
+        .table-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr 0.5fr;
+            padding: 15px 20px;
+            border-bottom: 1px solid #e0e0e0;
+            align-items: center;
+        }
+
+        .table-row:hover {
+            background: #f8f9fa;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .status-active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-inactive {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 5px;
+        }
+
+        .action-btn.view {
+            color: var(--primary);
+        }
+
+        .action-btn.edit {
+            color: var(--warning);
+        }
+
+        .action-btn.delete {
+            color: var(--danger);
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 90%;
+            position: relative;
+            animation: modalSlide 0.3s ease;
+        }
+
+        @keyframes modalSlide {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--gray);
+        }
+
+        /* Loading */
+        .loading {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            color: white;
+        }
+
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 992px) {
+            .auth-container {
+                flex-direction: column;
+                max-width: 500px;
+            }
+            
+            .auth-left, .auth-right {
+                padding: 30px;
+            }
+            
+            .dashboard-container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: auto;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success {
+            border-left: 4px solid var(--secondary);
+        }
+
+        .toast.error {
+            border-left: 4px solid var(--danger);
+        }
+
+        .toast.info {
+            border-left: 4px solid var(--primary);
+        }
+
+        .toast i {
+            font-size: 1.5rem;
+        }
+
+        .toast.success i {
+            color: var(--secondary);
+        }
+
+        .toast.error i {
+            color: var(--danger);
+        }
+
+        .toast.info i {
+            color: var(--primary);
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div class="loading" id="loading">
+        <div class="loading-spinner"></div>
+        <p>Yuklanmoqda...</p>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast"></div>
+
+    <!-- Auth Container (Login/Register) -->
+    <div class="auth-container" id="authContainer">
+        <div class="auth-left">
+            <div class="auth-logo">
+                <i class="fas fa-id-card"></i>
+                VIZITKA ID
+            </div>
+            <h1 style="font-size: 2.5rem; margin-bottom: 20px; position: relative; z-index: 1;">
+                Professional Vizitka Tizimi
+            </h1>
+            <p style="font-size: 1.2rem; margin-bottom: 30px; position: relative; z-index: 1;">
+                O'z biznesingiz uchun zamonaviy vizitkalar yarating va boshqaring
+            </p>
+            
+            <ul class="auth-features">
+                <li>
+                    <i class="fas fa-bolt"></i>
+                    <span>Tez va oson vizitka yaratish</span>
+                </li>
+                <li>
+                    <i class="fas fa-qrcode"></i>
+                    <span>QR kod va barkod generatori</span>
+                </li>
+                <li>
+                    <i class="fas fa-cloud"></i>
+                    <span>Bulutda saqlash va sinxronizatsiya</span>
+                </li>
+                <li>
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Xavfsiz foydalanuvchi hisoblari</span>
+                </li>
+                <li>
+                    <i class="fas fa-mobile-alt"></i>
+                    <span>Barcha qurilmalar uchun moslashuvchan</span>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="auth-right" id="authRight">
+            <!-- Login Form -->
+            <div id="loginForm">
+                <h2 class="auth-title">Tizimga Kirish</h2>
+                <p class="auth-subtitle">
+                    Hisobingizga kirish uchun elektron pochta va parolingizni kiriting
+                </p>
+                
+                <form id="loginFormElement">
+                    <div class="form-group">
+                        <label class="form-label">Elektron Pochta</label>
+                        <div class="input-with-icon">
+                            <i class="fas fa-envelope"></i>
+                            <input type="email" id="loginEmail" class="form-control" placeholder="email@example.com" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Parol</label>
+                        <div class="input-with-icon">
+                            <i class="fas fa-lock"></i>
+                            <input type="password" id="loginPassword" class="form-control" placeholder="••••••••" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group" style="display: flex; justify-content: space-between; align-items: center;">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" id="rememberMe">
+                            <span>Eslab qolish</span>
+                        </label>
+                        <a href="#" id="forgotPassword" style="color: var(--primary); text-decoration: none;">Parolni unutdingizmi?</a>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-sign-in-alt"></i>
+                        Tizimga Kirish
+                    </button>
+                </form>
+                
+                <div class="auth-links">
+                    Hisobingiz yo'qmi? <a href="#" id="showRegister">Ro'yxatdan o'tish</a>
+                </div>
+            </div>
+            
+            <!-- Register Form -->
+            <div id="registerForm" style="display: none;">
+                <h2 class="auth-title">Ro'yxatdan O'tish</h2>
+                <p class="auth-subtitle">
+                    Yangi hisob yaratish uchun quyidagi maydonlarni to'ldiring
+                </p>
+                
+                <form id="registerFormElement">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Ism</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-user"></i>
+                                <input type="text" id="registerFirstName" class="form-control" placeholder="Ism" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Familya</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-user"></i>
+                                <input type="text" id="registerLastName" class="form-control" placeholder="Familya" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Elektron Pochta</label>
+                        <div class="input-with-icon">
+                            <i class="fas fa-envelope"></i>
+                            <input type="email" id="registerEmail" class="form-control" placeholder="email@example.com" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Telefon Raqam</label>
+                        <div class="input-with-icon">
+                            <i class="fas fa-phone"></i>
+                            <input type="tel" id="registerPhone" class="form-control" placeholder="+998 90 123 45 67" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Parol</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-lock"></i>
+                                <input type="password" id="registerPassword" class="form-control" placeholder="••••••••" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Parolni Tasdiqlash</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-lock"></i>
+                                <input type="password" id="registerConfirmPassword" class="form-control" placeholder="••••••••" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" id="acceptTerms" required>
+                            <span>Men <a href="#" style="color: var(--primary);">Foydalanish shartlari</a> va <a href="#" style="color: var(--primary);">Maxfiylik siyosati</a> bilan tanishdim va roziman</span>
+                        </label>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-secondary">
+                        <i class="fas fa-user-plus"></i>
+                        Ro'yxatdan O'tish
+                    </button>
+                </form>
+                
+                <div class="auth-links">
+                    Allaqachon hisobingiz bormi? <a href="#" id="showLogin">Tizimga kirish</a>
+                </div>
+            </div>
+            
+            <!-- Forgot Password Form -->
+            <div id="forgotPasswordForm" style="display: none;">
+                <h2 class="auth-title">Parolni Tiklash</h2>
+                <p class="auth-subtitle">
+                    Parolingizni tiklash uchun elektron pochtangizni kiriting. Sizga parolni tiklash uchun havola yuboramiz.
+                </p>
+                
+                <form id="forgotPasswordFormElement">
+                    <div class="form-group">
+                        <label class="form-label">Elektron Pochta</label>
+                        <div class="input-with-icon">
+                            <i class="fas fa-envelope"></i>
+                            <input type="email" id="forgotEmail" class="form-control" placeholder="email@example.com" required>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i>
+                        Parolni Tiklash
+                    </button>
+                </form>
+                
+                <div class="auth-links">
+                    <a href="#" id="backToLogin">← Tizimga kirish sahifasiga qaytish</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Container (Ko'rinadi faqat login qilgandan keyin) -->
+    <div class="dashboard-container" id="dashboardContainer">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="user-profile">
+                    <div class="user-avatar" id="userAvatar">A</div>
+                    <div class="user-info">
+                        <h3 id="userName">Ali Valiyev</h3>
+                        <p id="userEmail">ali@example.com</p>
+                    </div>
+                </div>
+            </div>
+            
+            <nav class="sidebar-menu">
+                <a href="#" class="menu-item active" data-page="dashboard">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Boshqaruv paneli</span>
+                </a>
+                <a href="#" class="menu-item" data-page="create-card">
+                    <i class="fas fa-plus-circle"></i>
+                    <span>Vizitka Yaratish</span>
+                </a>
+                <a href="#" class="menu-item" data-page="my-cards">
+                    <i class="fas fa-id-card"></i>
+                    <span>Mening Vizitkalarim</span>
+                </a>
+                <a href="#" class="menu-item" data-page="templates">
+                    <i class="fas fa-palette"></i>
+                    <span>Shablonlar</span>
+                </a>
+                <a href="#" class="menu-item" data-page="scan">
+                    <i class="fas fa-qrcode"></i>
+                    <span>QR Skanerlash</span>
+                </a>
+                <a href="#" class="menu-item" data-page="settings">
+                    <i class="fas fa-cog"></i>
+                    <span>Sozlamalar</span>
+                </a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <button class="btn btn-outline" onclick="logout()" style="width: 100%;">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Chiqish
+                </button>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Navbar -->
+            <div class="navbar">
+                <div class="navbar-title">
+                    <i class="fas fa-id-card"></i>
+                    <span id="pageTitle">Boshqaruv paneli</span>
+                </div>
+                
+                <div class="navbar-actions">
+                    <button class="notification-btn">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-badge">3</span>
+                    </button>
+                    <button class="btn btn-primary" onclick="showCreateCard()">
+                        <i class="fas fa-plus"></i>
+                        Yangi Vizitka
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Content Pages -->
+            <div class="content">
+                <!-- Dashboard Page -->
+                <div id="dashboardPage">
+                    <div class="dashboard-cards">
+                        <div class="dashboard-card">
+                            <div class="card-icon primary">
+                                <i class="fas fa-id-card"></i>
+                            </div>
+                            <div class="card-info">
+                                <h3 id="totalCards">0</h3>
+                                <p>Jami Vizitkalar</p>
+                            </div>
+                        </div>
+                        
+                        <div class="dashboard-card">
+                            <div class="card-icon success">
+                                <i class="fas fa-eye"></i>
+                            </div>
+                            <div class="card-info">
+                                <h3 id="totalViews">0</h3>
+                                <p>Ko'rishlar Soni</p>
+                            </div>
+                        </div>
+                        
+                        <div class="dashboard-card">
+                            <div class="card-icon warning">
+                                <i class="fas fa-download"></i>
+                            </div>
+                            <div class="card-info">
+                                <h3 id="totalDownloads">0</h3>
+                                <p>Yuklab Olishlar</p>
+                            </div>
+                        </div>
+                        
+                        <div class="dashboard-card">
+                            <div class="card-icon danger">
+                                <i class="fas fa-share-alt"></i>
+                            </div>
+                            <div class="card-info">
+                                <h3 id="totalShares">0</h3>
+                                <p>Ulashishlar</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card-form">
+                        <h3 style="margin-bottom: 20px; color: var(--dark);">So'nggi Faoliyat</h3>
+                        <div id="recentActivity">
+                            <!-- Recent activity will be loaded here -->
+                            <p style="text-align: center; color: var(--gray); padding: 40px;">
+                                <i class="fas fa-history" style="font-size: 2rem; margin-bottom: 15px;"></i><br>
+                                Hozircha faoliyat mavjud emas
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Create Card Page -->
+                <div id="createCardPage" style="display: none;">
+                    <h2 style="margin-bottom: 30px; color: var(--dark);">Yangi Vizitka Yaratish</h2>
+                    
+                    <div class="card-form">
+                        <form id="createCardForm">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">To'liq Ism Familya</label>
+                                    <input type="text" id="cardFullName" class="form-control" placeholder="Ali Valiyev" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Lavozim</label>
+                                    <input type="text" id="cardPosition" class="form-control" placeholder="Direktor" required>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Kompaniya</label>
+                                    <input type="text" id="cardCompany" class="form-control" placeholder="TechCorp MChJ" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Telefon Raqam</label>
+                                    <input type="tel" id="cardPhone" class="form-control" placeholder="+998 90 123 45 67" required>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Elektron Pochta</label>
+                                    <input type="email" id="cardEmail" class="form-control" placeholder="ali@techcorp.uz" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Veb Sayt</label>
+                                    <input type="url" id="cardWebsite" class="form-control" placeholder="https://techcorp.uz">
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Manzil</label>
+                                <input type="text" id="cardAddress" class="form-control" placeholder="Toshkent sh., Yunusobod tumani">
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Karta Rangi</label>
+                                    <input type="color" id="cardColor" class="form-control" value="#2c3e50" style="height: 50px;">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Shablon</label>
+                                    <select id="cardTemplate" class="form-control">
+                                        <option value="modern">Modern</option>
+                                        <option value="classic">Classic</option>
+                                        <option value="minimal">Minimal</option>
+                                        <option value="creative">Creative</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Rasm Yuklash</label>
+                                <div class="photo-upload" onclick="document.getElementById('cardPhotoInput').click()">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <p>Rasm yuklash uchun bosing (JPG, PNG)</p>
+                                    <p><small>Optimal o'lcham: 400x400 px</small></p>
+                                    <input type="file" id="cardPhotoInput" accept="image/*" style="display: none;" onchange="previewCardPhoto(event)">
+                                </div>
+                                <img id="cardPhotoPreview" src="" alt="Rasm ko'rinishi" style="display: none;">
+                            </div>
+                            
+                            <div class="btn-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 30px;">
+                                <button type="button" class="btn btn-secondary" onclick="previewCard()">
+                                    <i class="fas fa-eye"></i>
+                                    Oldindan Ko'rish
+                                </button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i>
+                                    Vizitkani Saqlash
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <!-- Card Preview -->
+                    <div id="cardPreviewSection" style="display: none;">
+                        <h3 style="margin: 40px 0 20px 0; color: var(--dark);">Vizitka Ko'rinishi</h3>
+                        <div class="id-card-preview" id="idCardPreview">
+                            <!-- Card preview will be generated here -->
+                        </div>
+                        
+                        <div class="btn-group" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-top: 20px;">
+                            <button class="btn btn-secondary" onclick="downloadCard()">
+                                <i class="fas fa-download"></i>
+                                Yuklab Olish
+                            </button>
+                            <button class="btn btn-primary" onclick="printCard()">
+                                <i class="fas fa-print"></i>
+                                Chop etish
+                            </button>
+                            <button class="btn btn-danger" onclick="shareCard()">
+                                <i class="fas fa-share-alt"></i>
+                                Ulashish
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- My Cards Page -->
+                <div id="myCardsPage" style="display: none;">
+                    <h2 style="margin-bottom: 30px; color: var(--dark);">Mening Vizitkalarim</h2>
+                    
+                    <div class="cards-table">
+                        <div class="table-header">
+                            <div>Ism / Kompaniya</div>
+                            <div>Lavozim</div>
+                            <div>Telefon</div>
+                            <div>Holati</div>
+                            <div>Amallar</div>
+                        </div>
+                        
+                        <div id="cardsTableBody">
+                            <!-- Cards will be loaded here -->
+                            <div class="table-row" style="text-align: center; padding: 40px;">
+                                <div style="grid-column: 1 / -1;">
+                                    <i class="fas fa-id-card" style="font-size: 2rem; color: var(--gray); margin-bottom: 15px;"></i><br>
+                                    Hozircha vizitkalar mavjud emas
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Other pages will be added similarly -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Card Details -->
+    <div class="modal" id="cardModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+            <h2 id="modalTitle">Vizitka Ma'lumotlari</h2>
+            <div id="modalContent"></div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== GLOBAL VARIABLES ====================
+        let currentUser = null;
+        let userCards = [];
+        const API_BASE_URL = 'http://localhost:3000/api'; // Change this to your backend URL
+        
+        // ==================== AUTHENTICATION FUNCTIONS ====================
+        
+        // Show loading
+        function showLoading() {
+            document.getElementById('loading').style.display = 'flex';
+        }
+        
+        // Hide loading
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+        }
+        
+        // Show toast notification
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            toast.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+                <span>${message}</span>
+            `;
+            toast.className = `toast ${type} show`;
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+        
+        // Switch between login/register/forgot password forms
+        document.getElementById('showRegister').addEventListener('click', function(e) {
+            e.preventDefault();
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'block';
+            document.getElementById('forgotPasswordForm').style.display = 'none';
+        });
+        
+        document.getElementById('showLogin').addEventListener('click', function(e) {
+            e.preventDefault();
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('forgotPasswordForm').style.display = 'none';
+        });
+        
+        document.getElementById('forgotPassword').addEventListener('click', function(e) {
+            e.preventDefault();
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('forgotPasswordForm').style.display = 'block';
+        });
+        
+        document.getElementById('backToLogin').addEventListener('click', function(e) {
+            e.preventDefault();
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('forgotPasswordForm').style.display = 'none';
+        });
+        
+        // Handle login
+        document.getElementById('loginFormElement').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const rememberMe = document.getElementById('rememberMe').checked;
+            
+            if (!email || !password) {
+                showToast('Iltimos, barcha maydonlarni toʻldiring!', 'error');
+                return;
+            }
+            
+            showLoading();
+            
+            try {
+                // In real application, this would be an API call
+                // For demo, we'll simulate a successful login
+                setTimeout(() => {
+                    // Simulate API response
+                    const mockUser = {
+                        id: 'user_123',
+                        email: email,
+                        firstName: 'Ali',
+                        lastName: 'Valiyev',
+                        phone: '+998 90 123 45 67',
+                        token: 'mock_jwt_token_' + Date.now(),
+                        role: 'user'
+                    };
+                    
+                    // Save user data
+                    localStorage.setItem('currentUser', JSON.stringify(mockUser));
+                    localStorage.setItem('authToken', mockUser.token);
+                    if (rememberMe) {
+                        localStorage.setItem('rememberEmail', email);
+                    }
+                    
+                    currentUser = mockUser;
+                    
+                    hideLoading();
+                    showToast('Muvaffaqiyatli kirish!', 'success');
+                    
+                    // Show dashboard
+                    showDashboard();
+                    
+                }, 1500);
+                
+            } catch (error) {
+                hideLoading();
+                showToast('Kirishda xatolik: ' + error.message, 'error');
+            }
+        });
+        
+        // Handle registration
+        document.getElementById('registerFormElement').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const firstName = document.getElementById('registerFirstName').value;
+            const lastName = document.getElementById('registerLastName').value;
+            const email = document.getElementById('registerEmail').value;
+            const phone = document.getElementById('registerPhone').value;
+            const password = document.getElementById('registerPassword').value;
+            const confirmPassword = document.getElementById('registerConfirmPassword').value;
+            
+            // Validation
+            if (!firstName || !lastName || !email || !phone || !password || !confirmPassword) {
+                showToast('Iltimos, barcha maydonlarni toʻldiring!', 'error');
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                showToast('Parollar mos kelmadi!', 'error');
+                return;
+            }
+            
+            if (!document.getElementById('acceptTerms').checked) {
+                showToast('Foydalanish shartlarini qabul qilishingiz kerak!', 'error');
+                return;
+            }
+            
+            showLoading();
+            
+            try {
+                // In real application, this would be an API call
+                setTimeout(() => {
+                    // Simulate API response
+                    const mockUser = {
+                        id: 'user_' + Date.now(),
+                        email: email,
+                        firstName: firstName,
+                        lastName: lastName,
+                        phone: phone,
+                        token: 'mock_jwt_token_' + Date.now(),
+                        role: 'user'
+                    };
+                    
+                    // Save user data
+                    localStorage.setItem('currentUser', JSON.stringify(mockUser));
+                    localStorage.setItem('authToken', mockUser.token);
+                    
+                    currentUser = mockUser;
+                    
+                    hideLoading();
+                    showToast('Muvaffaqiyatli roʻyxatdan oʻtdingiz!', 'success');
+                    
+                    // Show dashboard
+                    showDashboard();
+                    
+                }, 1500);
+                
+            } catch (error) {
+                hideLoading();
+                showToast('Roʻyxatdan oʻtishda xatolik: ' + error.message, 'error');
+            }
+        });
+        
+        // Handle forgot password
+        document.getElementById('forgotPasswordFormElement').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('forgotEmail').value;
+            
+            if (!email) {
+                showToast('Iltimos, elektron pochtangizni kiriting!', 'error');
+                return;
+            }
+            
+            showLoading();
+            
+            try {
+                // Simulate API call
+                setTimeout(() => {
+                    hideLoading();
+                    showToast('Parol tiklash havolasi elektron pochtangizga yuborildi!', 'success');
+                    document.getElementById('loginForm').style.display = 'block';
+                    document.getElementById('forgotPasswordForm').style.display = 'none';
+                }, 1500);
+                
+            } catch (error) {
+                hideLoading();
+                showToast('Xatolik: ' + error.message, 'error');
+            }
+        });
+        
+        // ==================== DASHBOARD FUNCTIONS ====================
+        
+        // Show dashboard after login
+        function showDashboard() {
+            document.getElementById('authContainer').style.display = 'none';
+            document.getElementById('dashboardContainer').style.display = 'flex';
+            
+            // Load user data
+            loadUserData();
+            
+            // Load dashboard stats
+            loadDashboardStats();
+            
+            // Load user cards
+            loadUserCards();
+        }
+        
+        // Load user data
+        function loadUserData() {
+            if (!currentUser) {
+                const savedUser = localStorage.getItem('currentUser');
+                if (savedUser) {
+                    currentUser = JSON.parse(savedUser);
+                } else {
+                    // If no user is logged in, show auth container
+                    document.getElementById('authContainer').style.display = 'flex';
+                    document.getElementById('dashboardContainer').style.display = 'none';
+                    return;
+                }
+            }
+            
+            // Update UI with user data
+            document.getElementById('userName').textContent = 
+                `${currentUser.firstName} ${currentUser.lastName}`;
+            document.getElementById('userEmail').textContent = currentUser.email;
+            document.getElementById('userAvatar').textContent = 
+                currentUser.firstName.charAt(0) + currentUser.lastName.charAt(0);
+        }
+        
+        // Load dashboard statistics
+        function loadDashboardStats() {
+            // In real app, this would be an API call
+            document.getElementById('totalCards').textContent = userCards.length;
+            document.getElementById('totalViews').textContent = '1,234';
+            document.getElementById('totalDownloads').textContent = '567';
+            document.getElementById('totalShares').textContent = '89';
+        }
+        
+        // Load user's cards
+        function loadUserCards() {
+            // Load from localStorage for demo
+            const savedCards = localStorage.getItem('userCards_' + (currentUser?.id || 'demo'));
+            if (savedCards) {
+                userCards = JSON.parse(savedCards);
+            } else {
+                // Create demo cards for first-time users
+                userCards = [
+                    {
+                        id: 'card_1',
+                        fullName: 'Ali Valiyev',
+                        position: 'Bosh Direktor',
+                        company: 'TechCorp MChJ',
+                        phone: '+998 90 123 45 67',
+                        email: 'ali@techcorp.uz',
+                        website: 'https://techcorp.uz',
+                        address: 'Toshkent sh., Yunusobod',
+                        color: '#2c3e50',
+                        status: 'active',
+                        createdAt: new Date().toISOString(),
+                        views: 123,
+                        downloads: 45,
+                        shares: 12
+                    },
+                    {
+                        id: 'card_2',
+                        fullName: 'Sarvar Karimov',
+                        position: 'Marketing Menejeri',
+                        company: 'Alpha Business',
+                        phone: '+998 91 234 56 78',
+                        email: 'sarvar@alphabiz.uz',
+                        website: 'https://alphabiz.uz',
+                        address: 'Samarqand sh., Registon ko\'chasi',
+                        color: '#27ae60',
+                        status: 'active',
+                        createdAt: new Date().toISOString(),
+                        views: 89,
+                        downloads: 23,
+                        shares: 5
+                    }
+                ];
+                localStorage.setItem('userCards_' + (currentUser?.id || 'demo'), JSON.stringify(userCards));
+            }
+            
+            updateCardsTable();
+        }
+        
+        // Update cards table
+        function updateCardsTable() {
+            const tableBody = document.getElementById('cardsTableBody');
+            
+            if (userCards.length === 0) {
+                tableBody.innerHTML = `
+                    <div class="table-row" style="text-align: center; padding: 40px;">
+                        <div style="grid-column: 1 / -1;">
+                            <i class="fas fa-id-card" style="font-size: 2rem; color: var(--gray); margin-bottom: 15px;"></i><br>
+                            Hozircha vizitkalar mavjud emas
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+            
+            tableBody.innerHTML = '';
+            
+            userCards.forEach((card, index) => {
+                const row = document.createElement('div');
+                row.className = 'table-row';
+                row.innerHTML = `
+                    <div>
+                        <strong>${card.fullName}</strong><br>
+                        <small style="color: var(--gray);">${card.company}</small>
+                    </div>
+                    <div>${card.position}</div>
+                    <div>${card.phone}</div>
+                    <div>
+                        <span class="status-badge ${card.status === 'active' ? 'status-active' : 'status-inactive'}">
+                            ${card.status === 'active' ? 'Faol' : 'Nofaol'}
+                        </span>
+                    </div>
+                    <div class="action-buttons">
+                        <button class="action-btn view" onclick="viewCard(${index})" title="Ko'rish">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="action-btn edit" onclick="editCard(${index})" title="Tahrirlash">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="action-btn delete" onclick="deleteCard(${index})" title="O'chirish">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+        
+        // ==================== CARD MANAGEMENT FUNCTIONS ====================
+        
+        // Preview card photo
+        function previewCardPhoto(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById('cardPhotoPreview');
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+        
+        // Preview card
+        function previewCard() {
+            const formData = {
+                fullName: document.getElementById('cardFullName').value || 'Ali Valiyev',
+                position: document.getElementById('cardPosition').value || 'Direktor',
+                company: document.getElementById('cardCompany').value || 'TechCorp MChJ',
+                phone: document.getElementById('cardPhone').value || '+998 90 123 45 67',
+                email: document.getElementById('cardEmail').value || 'ali@techcorp.uz',
+                website: document.getElementById('cardWebsite').value || 'https://techcorp.uz',
+                address: document.getElementById('cardAddress').value || 'Toshkent sh., Yunusobod',
+                color: document.getElementById('cardColor').value || '#2c3e50'
+            };
+            
+            // Generate card ID
+            const companyPrefix = formData.company.substring(0, 2).toUpperCase();
+            const year = new Date().getFullYear();
+            const randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+            const cardId = `${companyPrefix}-${year}-${randomNum}`;
+            
+            // Update preview
+            const previewDiv = document.getElementById('idCardPreview');
+            previewDiv.innerHTML = `
+                <div class="card-header">
+                    <div class="company-logo">${formData.company.substring(0, 10)}</div>
+                    <div class="card-type">ID Karta</div>
+                </div>
+                
+                <div class="card-body">
+                    ${document.getElementById('cardPhotoPreview').src ? 
+                        `<img class="card-photo" src="${document.getElementById('cardPhotoPreview').src}" alt="Rasm">` :
+                        `<div style="width: 120px; height: 120px; border-radius: 15px; background: ${formData.color}; display: flex; align-items: center; justify-content: center; color: white; font-size: 3rem;">
+                            <i class="fas fa-user"></i>
+                        </div>`
+                    }
+                    <div class="card-info">
+                        <h2>${formData.fullName}</h2>
+                        <p><i class="fas fa-briefcase"></i> ${formData.position}</p>
+                        <p><i class="fas fa-building"></i> ${formData.company}</p>
+                        <p><i class="fas fa-phone"></i> ${formData.phone}</p>
+                        <p><i class="fas fa-envelope"></i> ${formData.email}</p>
+                        <p><i class="fas fa-map-marker-alt"></i> ${formData.address}</p>
+                    </div>
+                </div>
+                
+                <div class="card-footer">
+                    <div class="barcode-container">
+                        <svg id="barcode"></svg>
+                    </div>
+                    <div class="card-id">ID: ${cardId}</div>
+                </div>
+            `;
+            
+            // Set background color
+            previewDiv.style.background = `linear-gradient(135deg, ${formData.color}, #4a6491)`;
+            
+            // Generate barcode
+            setTimeout(() => {
+                JsBarcode("#barcode", cardId, {
+                    format: "CODE128",
+                    width: 2,
+                    height: 60,
+                    displayValue: true,
+                    fontSize: 16,
+                    background: "#ffffff",
+                    lineColor: "#000000"
+                });
+            }, 100);
+            
+            // Show preview section
+            document.getElementById('cardPreviewSection').style.display = 'block';
+        }
+        
+        // Create new card
+        document.getElementById('createCardForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const cardData = {
+                id: 'card_' + Date.now(),
+                fullName: document.getElementById('cardFullName').value,
+                position: document.getElementById('cardPosition').value,
+                company: document.getElementById('cardCompany').value,
+                phone: document.getElementById('cardPhone').value,
+                email: document.getElementById('cardEmail').value,
+                website: document.getElementById('cardWebsite').value,
+                address: document.getElementById('cardAddress').value,
+                color: document.getElementById('cardColor').value,
+                template: document.getElementById('cardTemplate').value,
+                photo: document.getElementById('cardPhotoPreview').src,
+                status: 'active',
+                createdAt: new Date().toISOString(),
+                views: 0,
+                downloads: 0,
+                shares: 0
+            };
+            
+            // Add to user's cards
+            userCards.push(cardData);
+            localStorage.setItem('userCards_' + (currentUser?.id || 'demo'), JSON.stringify(userCards));
+            
+            // Update UI
+            updateCardsTable();
+            loadDashboardStats();
+            
+            // Show success message
+            showToast('Vizitka muvaffaqiyatli yaratildi!', 'success');
+            
+            // Reset form
+            document.getElementById('createCardForm').reset();
+            document.getElementById('cardPhotoPreview').style.display = 'none';
+            document.getElementById('cardPreviewSection').style.display = 'none';
+            
+            // Switch to My Cards page
+            switchPage('my-cards');
+        });
+        
+        // View card details
+        function viewCard(index) {
+            const card = userCards[index];
+            
+            document.getElementById('modalTitle').textContent = card.fullName;
+            document.getElementById('modalContent').innerHTML = `
+                <div style="display: grid; grid-template-columns: auto 1fr; gap: 20px; margin: 20px 0;">
+                    <div>
+                        ${card.photo ? 
+                            `<img src="${card.photo}" style="width: 120px; height: 120px; border-radius: 15px; object-fit: cover;">` :
+                            `<div style="width: 120px; height: 120px; border-radius: 15px; background: ${card.color}; display: flex; align-items: center; justify-content: center; color: white;">
+                                <i class="fas fa-user" style="font-size: 3rem;"></i>
+                            </div>`
+                        }
+                    </div>
+                    <div>
+                        <p><strong>ID:</strong> ${card.id}</p>
+                        <p><strong>Lavozim:</strong> ${card.position}</p>
+                        <p><strong>Kompaniya:</strong> ${card.company}</p>
+                        <p><strong>Telefon:</strong> ${card.phone}</p>
+                        <p><strong>Email:</strong> ${card.email}</p>
+                        <p><strong>Veb sayt:</strong> ${card.website || 'Mavjud emas'}</p>
+                        <p><strong>Manzil:</strong> ${card.address || 'Mavjud emas'}</p>
+                        <p><strong>Yaratilgan:</strong> ${new Date(card.createdAt).toLocaleDateString('uz-UZ')}</p>
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 20px;">
+                    <div style="text-align: center; background: #f8f9fa; padding: 10px; border-radius: 8px;">
+                        <div style="font-size: 1.5rem; font-weight: bold; color: var(--primary);">${card.views}</div>
+                        <div style="font-size: 0.9rem; color: var(--gray);">Ko'rishlar</div>
+                    </div>
+                    <div style="text-align: center; background: #f8f9fa; padding: 10px; border-radius: 8px;">
+                        <div style="font-size: 1.5rem; font-weight: bold; color: var(--secondary);">${card.downloads}</div>
+                        <div style="font-size: 0.9rem; color: var(--gray);">Yuklab olishlar</div>
+                    </div>
+                    <div style="text-align: center; background: #f8f9fa; padding: 10px; border-radius: 8px;">
+                        <div style="font-size: 1.5rem; font-weight: bold; color: var(--warning);">${card.shares}</div>
+                        <div style="font-size: 0.9rem; color: var(--gray);">Ulashishlar</div>
+                    </div>
+                </div>
+                <div style="text-align: center; margin-top: 20px;">
+                    <button onclick="downloadCardById('${card.id}')" style="background: var(--primary); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; margin-right: 10px;">
+                        <i class="fas fa-download"></i> Yuklab olish
+                    </button>
+                    <button onclick="shareCardById('${card.id}')" style="background: var(--secondary); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer;">
+                        <i class="fas fa-share-alt"></i> Ulashish
+                    </button>
+                </div>
+            `;
+            
+            document.getElementById('cardModal').style.display = 'flex';
+        }
+        
+        // Edit card
+        function editCard(index) {
+            const card = userCards[index];
+            
+            // Fill form with card data
+            document.getElementById('cardFullName').value = card.fullName;
+            document.getElementById('cardPosition').value = card.position;
+            document.getElementById('cardCompany').value = card.company;
+            document.getElementById('cardPhone').value = card.phone;
+            document.getElementById('cardEmail').value = card.email;
+            document.getElementById('cardWebsite').value = card.website || '';
+            document.getElementById('cardAddress').value = card.address || '';
+            document.getElementById('cardColor').value = card.color;
+            
+            if (card.photo) {
+                document.getElementById('cardPhotoPreview').src = card.photo;
+                document.getElementById('cardPhotoPreview').style.display = 'block';
+            }
+            
+            // Switch to create card page
+            switchPage('create-card');
+            showToast('Vizitka tahrirlash rejimi', 'info');
+        }
+        
+        // Delete card
+        function deleteCard(index) {
+            if (confirm('Bu vizitkani oʻchirishni istaysizmi?')) {
+                userCards.splice(index, 1);
+                localStorage.setItem('userCards_' + (currentUser?.id || 'demo'), JSON.stringify(userCards));
+                updateCardsTable();
+                loadDashboardStats();
+                showToast('Vizitka muvaffaqiyatli oʻchirildi', 'success');
+            }
+        }
+        
+        // Download card
+        function downloadCard() {
+            const cardElement = document.getElementById('idCardPreview');
+            
+            html2canvas(cardElement).then(canvas => {
+                const link = document.createElement('a');
+                link.download = `vizitka-${Date.now()}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+                showToast('Vizitka yuklab olindi!', 'success');
+            });
+        }
+        
+        function downloadCardById(cardId) {
+            // Implement card download by ID
+            showToast('Vizitka yuklab olindi!', 'success');
+        }
+        
+        // Print card
+        function printCard() {
+            const cardElement = document.getElementById('idCardPreview');
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <html>
+                    <head>
+                        <title>Vizitka Chop etish</title>
+                        <style>
+                            body { margin: 0; padding: 20px; }
+                            @media print {
+                                @page { margin: 0; }
+                                body { padding: 0; }
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        ${cardElement.outerHTML}
+                        <script>
+                            window.onload = function() { window.print(); window.close(); }
+                        <\/script>
+                    </body>
+                </html>
+            `);
+            printWindow.document.close();
+        }
+        
+        // Share card
+        function shareCard() {
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Mening vizitkam',
+                    text: 'Bu mening professional vizitkam',
+                    url: window.location.href
+                }).then(() => {
+                    showToast('Vizitka muvaffaqiyatli ulashildi!', 'success');
+                });
+            } else {
+                navigator.clipboard.writeText(window.location.href);
+                showToast('Havola buferga nusxalandi!', 'success');
+            }
+        }
+        
+        function shareCardById(cardId) {
+            // Implement card sharing by ID
+            showToast('Vizitka ulashildi!', 'success');
+        }
+        
+        // ==================== PAGE NAVIGATION ====================
+        
+        // Switch between pages
+        function switchPage(pageName) {
+            // Hide all pages
+            document.querySelectorAll('[id$="Page"]').forEach(page => {
+                page.style.display = 'none';
+            });
+            
+            // Show selected page
+            document.getElementById(pageName + 'Page').style.display = 'block';
+            
+            // Update page title
+            const titles = {
+                'dashboard': 'Boshqaruv paneli',
+                'create-card': 'Vizitka Yaratish',
+                'my-cards': 'Mening Vizitkalarim',
+                'templates': 'Shablonlar',
+                'scan': 'QR Skanerlash',
+                'settings': 'Sozlamalar'
+            };
+            document.getElementById('pageTitle').textContent = titles[pageName];
+            
+            // Update active menu item
+            document.querySelectorAll('.menu-item').forEach(item => {
+                item.classList.remove('active');
+                if (item.dataset.page === pageName) {
+                    item.classList.add('active');
+                }
+            });
+        }
+        
+        // Add click event listeners to menu items
+        document.querySelectorAll('.menu-item').forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                switchPage(this.dataset.page);
+            });
+        });
+        
+        // Show create card form
+        function showCreateCard() {
+            switchPage('create-card');
+        }
+        
+        // Close modal
+        function closeModal() {
+            document.getElementById('cardModal').style.display = 'none';
+        }
+        
+        // Logout
+        function logout() {
+            if (confirm('Tizimdan chiqishni istaysizmi?')) {
+                // Clear user data
+                localStorage.removeItem('currentUser');
+                localStorage.removeItem('authToken');
+                currentUser = null;
+                
+                // Show auth container
+                document.getElementById('authContainer').style.display = 'flex';
+                document.getElementById('dashboardContainer').style.display = 'none';
+                
+                // Reset auth forms
+                document.getElementById('loginForm').style.display = 'block';
+                document.getElementById('registerForm').style.display = 'none';
+                document.getElementById('forgotPasswordForm').style.display = 'none';
+                
+                showToast('Muvaffaqiyatli chiqildi', 'success');
+            }
+        }
+        
+        // ==================== INITIALIZATION ====================
+        
+        // Check if user is already logged in
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedUser = localStorage.getItem('currentUser');
+            const savedToken = localStorage.getItem('authToken');
+            
+            if (savedUser && savedToken) {
+                currentUser = JSON.parse(savedUser);
+                showDashboard();
+            } else {
+                // Check for remembered email
+                const rememberedEmail = localStorage.getItem('rememberEmail');
+                if (rememberedEmail) {
+                    document.getElementById('loginEmail').value = rememberedEmail;
+                    document.getElementById('rememberMe').checked = true;
+                }
+            }
+            
+            // Initialize barcode library
+            JsBarcode("#barcode", "DEMO-12345", {
+                format: "CODE128",
+                width: 2,
+                height: 60,
+                displayValue: true,
+                fontSize: 16,
+                background: "#ffffff",
+                lineColor: "#000000"
+            });
+        });
+    </script>
+</body>
+</html>
